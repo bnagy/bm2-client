@@ -13,8 +13,8 @@
 
 require File.dirname(__FILE__) + '/../bm2-core/fuzz_client'
 require File.dirname(__FILE__) + '/../bm2-core/connector'
-require 'conn_office'
-require 'conn_cdb'
+require File.dirname(__FILE__) + '/conn_office'
+require File.dirname(__FILE__) + '/conn_cdb'
 
 class WordFuzzClient < FuzzClient
     VERSION="3.5.0"
