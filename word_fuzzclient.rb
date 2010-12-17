@@ -15,6 +15,7 @@ require File.dirname(__FILE__) + '/../bm2-core/fuzz_client'
 require File.dirname(__FILE__) + '/../bm2-core/connector'
 require File.dirname(__FILE__) + '/conn_office'
 require File.dirname(__FILE__) + '/conn_cdb'
+require File.dirname(__FILE__) + '/word_delivery_agent'
 require 'rubygems'
 require 'trollop'
 
