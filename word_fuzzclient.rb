@@ -15,6 +15,15 @@ require File.dirname(__FILE__) + '/../bm2-core/fuzz_client'
 require File.dirname(__FILE__) + '/../bm2-core/connector'
 require File.dirname(__FILE__) + '/conn_office'
 require File.dirname(__FILE__) + '/conn_cdb'
+require 'rubygems'
+require 'trollop'
+
+OPTS = Trollop::options do 
+    opt :debug, "Turn on debug mode", :type => :boolean
+    opt :poll_interval, "Poll Interval", :type=>:integer, :default=>60
+    opt :server, "Server to connect to", :type=>:string, :default=>"192.168.122.1" # for qemu
+end
+
 
 class WordFuzzClient < FuzzClient
     VERSION="3.5.0"
@@ -59,12 +68,11 @@ class WordFuzzClient < FuzzClient
 end
 
 
-server="192.168.122.1"
 WordFuzzClient.setup(
-    'server_ip'=>server,
+    'server_ip'=>OPTS[:server],
     'work_dir'=>'R:/fuzzclient',
-    'debug'=>false,
-    'poll_interval'=>60,
+    'debug'=>OPTS[:debug],
+    'poll_interval'=>OPTS[:poll_interval],
     'queue_name'=>'word'
 )
 
