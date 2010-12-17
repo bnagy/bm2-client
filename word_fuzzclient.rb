@@ -50,6 +50,7 @@ class WordFuzzClient < FuzzClient
             fname=prepare_test_file( test )
             status, details, chain=@delivery_agent.deliver( fname, delivery_options )
             clean_up( fname )
+            [status, details, chain]
         rescue
             ["error: #{$!}",'',[]]
         end
