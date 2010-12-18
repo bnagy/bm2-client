@@ -55,7 +55,7 @@ class Monitor
         @debugger_uri=@debug_client.start_debugger('pid'=>pid, 'options'=>"-xi ld", 'path'=>CDB_PATH )
         @debugger=DRbObject.new nil, @debugger_uri
         @debugger.puts <<-eos
- load winext\\msec.dll
+ !load winext\\msec.dll
  .sympath c:\\localsymbols
  sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" av
  sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" sbo
