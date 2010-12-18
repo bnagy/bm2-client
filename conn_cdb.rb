@@ -174,7 +174,7 @@ module CONN_CDB
                 if owner==target_pid
                     begin
                         raise_win32_error("OpenThread #{tid}") if (hThread=OpenThread.call( THREAD_SUSPEND_RESUME,0,tid )).zero?
-                        retry_count=5
+                        retry_count=50
                         while (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
                             unless (retry_count-=1)<=0
                                 sleep(0.1)
