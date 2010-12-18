@@ -216,7 +216,7 @@ class Monitor
             @monitor_args['ignore_exceptions'].none? {|ignore_regexp| Regexp.new(ignore_regexp).match exception} 
         }
     rescue
-        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
+        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
         raise $!
     end
 
