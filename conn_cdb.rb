@@ -174,13 +174,15 @@ module CONN_CDB
                 if owner==target_pid
                     begin
                         raise_win32_error("OpenThread #{tid}") if (hThread=OpenThread.call( THREAD_SUSPEND_RESUME,0,tid )).zero?
-                        retry_count=1000
-                        suspend_count=SuspendThread.call( hThread )
-                        raise_win32_error("ResumeThread") if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
+                        if (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
+                            return true # if it can't be suspended, it's running.
+                        else
+                            raise_win32_error("ResumeThread") if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
+                        end
                     ensure
                         raise_win32_error("CloseHandle") if CloseHandle.call( hThread ).zero?
                     end
-                    return true if suspend_count==0
+                    return true if suspend_count==0 # if this thread was not suspended, it's running.
                 end
             end
             return false
