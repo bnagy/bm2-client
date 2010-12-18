@@ -28,11 +28,11 @@ module CONN_CDB
     INJECT_FAULTS=false
     FAULT_CHANCE=5
 
-    def raise_win32_error 
+    def raise_win32_error( str="" ) 
         unless (error_code=GetLastError.call) == ERROR_SUCCESS 
             msg = ' ' * 255 
             FormatMessage.call(0x3000, 0, error_code, 0, msg, 255, '') 
-            raise "#{COMPONENT}:#{VERSION}: Win32 Exception: #{msg.gsub!(/\000/, '').strip!}" 
+            raise "#{COMPONENT}:#{VERSION}: #{str} Win32 Exception: #{msg.gsub!(/\000/, '').strip!}" 
         else 
             raise 'GetLastError returned ERROR_SUCCESS' 
         end 
@@ -125,7 +125,7 @@ module CONN_CDB
         puts ".echo #{cookie=rand(2**32)}"
         mark=Time.now
         until qc_all =~ /#{cookie}/
-            sleep 0.1
+            sleep 1
             raise "#{COMPONENT}:#{VERSION}:#{__method__}: Timed out" if Time.now - mark > 3
         end
     end
@@ -160,24 +160,24 @@ module CONN_CDB
         # if a thread is suspended is to suspend it, which returns the
         # suspend count - 0 if it was previously running.
         begin
-            raise_win32_error if (hSnap=CreateToolhelp32Snapshot.call( TH32CS_SNAPTHREAD, 0 ))==INVALID_HANDLE_VALUE
+            raise_win32_error("createsnap") if (hSnap=CreateToolhelp32Snapshot.call( TH32CS_SNAPTHREAD, 0 ))==INVALID_HANDLE_VALUE
             # I'm going to go ahead and do this the horrible way. This is a
             # blank Threadentry32 structure, with the size (28) as the first
             # 4 bytes (little endian). It will be filled in by the Thread32Next
             # calls
             thr_raw="\x1c" << "\x00"*27
-            raise_win32_error unless Thread32First.call(hSnap, thr_raw)==1
+            raise_win32_error("thread32first") unless Thread32First.call(hSnap, thr_raw)==1
             while Thread32Next.call(hSnap, thr_raw)==1
                 # Again, manually 'parsing' the structure in hideous fashion
                 owner=thr_raw[12..15].unpack('L').first
                 tid=thr_raw[8..11].unpack('L').first
                 if owner==target_pid
                     begin
-                        raise_win32_error if (hThread=OpenThread.call( THREAD_SUSPEND_RESUME,0,tid )).zero?
-                        raise_win32_error if (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
-                        raise_win32_error if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
+                        raise_win32_error("openthread #{tid}") if (hThread=OpenThread.call( THREAD_SUSPEND_RESUME,0,tid )).zero?
+                        raise_win32_error("suspendthread") if (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
+                        raise_win32_error("resumethread") if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
                     ensure
-                        CloseHandle.call( hThread )
+                        raise_win32_error("closehandle") if CloseHandle.call( hThread ).zero?
                     end
                     return true if suspend_count==0
                 end
