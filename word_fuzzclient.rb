@@ -57,7 +57,7 @@ class WordFuzzClient < FuzzClient
 
     def deliver( test, delivery_options )
         begin
-            @delivery_agent||=WordDeliveryAgent.new
+            @delivery_agent||=WordDeliveryAgent.new( 'debug'=>self.class.debug, 'visible'=>false )
             fname=prepare_test_file( test )
             status, details, chain=@delivery_agent.deliver( fname, delivery_options )
             clean_up( fname )

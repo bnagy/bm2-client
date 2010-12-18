@@ -213,7 +213,7 @@ class Monitor
             raise RuntimeError, "#{COMPONENT}:#{VERSION}:#{__method__}: unfinished exception output."
         end
         output=~/second chance/i or output.scan( /frobozz(.*?)xyzzy/m ).any? {|exception|
-            @monitor_args['ignore_exceptions'].none? {|ignore_regexp| ignore_regexp.match exception} 
+            @monitor_args['ignore_exceptions'].none? {|ignore_regexp| Regexp.new(ignore_regexp).match exception} 
         }
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
