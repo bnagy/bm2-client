@@ -160,24 +160,23 @@ module CONN_CDB
         # if a thread is suspended is to suspend it, which returns the
         # suspend count - 0 if it was previously running.
         begin
-            raise_win32_error("createsnap") if (hSnap=CreateToolhelp32Snapshot.call( TH32CS_SNAPTHREAD, 0 ))==INVALID_HANDLE_VALUE
+            raise_win32_error("CreateSnap") if (hSnap=CreateToolhelp32Snapshot.call( TH32CS_SNAPTHREAD, 0 ))==INVALID_HANDLE_VALUE
             # I'm going to go ahead and do this the horrible way. This is a
             # blank Threadentry32 structure, with the size (28) as the first
             # 4 bytes (little endian). It will be filled in by the Thread32Next
             # calls
             thr_raw="\x1c" << "\x00"*27
-            raise_win32_error("thread32first") unless Thread32First.call(hSnap, thr_raw)==1
+            raise_win32_error("Thread32First") unless Thread32First.call(hSnap, thr_raw)==1
             while Thread32Next.call(hSnap, thr_raw)==1
                 # Again, manually 'parsing' the structure in hideous fashion
                 owner=thr_raw[12..15].unpack('L').first
                 tid=thr_raw[8..11].unpack('L').first
                 if owner==target_pid
                     begin
-                        raise_win32_error("openthread #{tid}") if (hThread=OpenThread.call( THREAD_SUSPEND_RESUME,0,tid )).zero?
+                        raise_win32_error("OpenThread #{tid}") if (hThread=OpenThread.call( THREAD_SUSPEND_RESUME,0,tid )).zero?
                         retry_count=5
                         begin
-                            suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
-                            if suspend_count==INVALID_HANDLE_VALUE
+                            if (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
                                 unless (retry_count-=1)<=0
                                     sleep(0.1) and retry
                                 else
@@ -185,9 +184,9 @@ module CONN_CDB
                                 end
                             end
                         end
-                        raise_win32_error("resumethread") if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
+                        raise_win32_error("ResumeThread") if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
                     ensure
-                        raise_win32_error("closehandle") if CloseHandle.call( hThread ).zero?
+                        raise_win32_error("CloseHandle") if CloseHandle.call( hThread ).zero?
                     end
                     return true if suspend_count==0
                 end
