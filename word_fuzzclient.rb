@@ -29,6 +29,9 @@ end
 
 class WordFuzzClient < FuzzClient
     VERSION="3.5.0"
+    COMPONENT="WordFuzzClient"
+    PREFIX="#{COMPONENT}-#{VERSION}"
+    RETRY_COUNT=100
 
     def prepare_test_file( data )
         begin
@@ -38,15 +41,19 @@ class WordFuzzClient < FuzzClient
             File.open(path, "wb+") {|io| io.write data}
             path
         rescue
-            raise RuntimeError, "Fuzzclient: Couldn't create test file #{filename} : #{$!}"
+            raise RuntimeError, "#{PREFIX}: Couldn't create test file #{filename} : #{$!}"
         end
     end
 
     def clean_up( fn )
         FileUtils.rm_f(fn)
+        retry_count=RETRY_COUNT
         while File.exist? fn
             sleep(0.1)
             FileUtils.rm_f(fn)
+            if (retry_count-=1)<=0
+                raise RuntimeError, "#{PREFIX}: Unable to delete test."
+            end
         end
     end
 
