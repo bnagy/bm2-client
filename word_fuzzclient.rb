@@ -59,6 +59,7 @@ class WordFuzzClient < FuzzClient
             clean_up( fname )
             [status, details, chain]
         rescue
+            warn $!
             ["error: #{$!}",'',[]]
         end
     end
