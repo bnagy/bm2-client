@@ -175,9 +175,7 @@ module CONN_CDB
                     begin
                         raise_win32_error("OpenThread #{tid}") if (hThread=OpenThread.call( THREAD_SUSPEND_RESUME,0,tid )).zero?
                         retry_count=1000
-                        if (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
-                            return false
-                        end
+                        suspend_count=SuspendThread.call( hThread )
                         raise_win32_error("ResumeThread") if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
                     ensure
                         raise_win32_error("CloseHandle") if CloseHandle.call( hThread ).zero?
