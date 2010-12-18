@@ -43,12 +43,10 @@ class WordFuzzClient < FuzzClient
     end
 
     def clean_up( fn )
-        50.times do
+        while File.exist? fn
             FileUtils.rm_f(fn)
-            return true unless File.exist? fn
             sleep(0.1)
         end
-        raise RuntimeError, "Fuzzclient: Failed to delete #{fn} : #{$!}"
     end
 
     def deliver( test, delivery_options )
