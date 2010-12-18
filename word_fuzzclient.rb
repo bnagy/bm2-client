@@ -47,13 +47,9 @@ class WordFuzzClient < FuzzClient
 
     def clean_up( fn )
         FileUtils.rm_f(fn)
-        retry_count=RETRY_COUNT
         while File.exist? fn
             sleep(0.1)
             FileUtils.rm_f(fn)
-            if (retry_count-=1)<=0
-                raise RuntimeError, "#{PREFIX}: Unable to delete test."
-            end
         end
     end
 
