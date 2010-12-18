@@ -35,6 +35,15 @@ class WordFuzzClient < FuzzClient
 
     def prepare_test_file( data )
         begin
+            # Delete any old tests
+            Dir.glob('R:/fuzzclient/*.doc', File::FNM_DOTMATCH).each {|fn|
+                next if File.directory?(fn)
+                begin
+                    FileUtils.rm_f(fn)
+                rescue
+                    next # probably still open
+                end
+            }
             @test_count||=0
             filename="#{@test_count+=1}.doc"
             path=File.join(self.class.work_dir,filename)
@@ -42,14 +51,6 @@ class WordFuzzClient < FuzzClient
             path
         rescue
             raise RuntimeError, "#{PREFIX}: Couldn't create test file #{filename} : #{$!}"
-        end
-    end
-
-    def clean_up( fn )
-        FileUtils.rm_f(fn)
-        while File.exist? fn
-            sleep(0.1)
-            FileUtils.rm_f(fn)
         end
     end
 
@@ -62,8 +63,6 @@ class WordFuzzClient < FuzzClient
         rescue
             warn $!
             ["error: #{$!}",'',[]]
-        ensure
-            clean_up( fname )
         end
     end
 
