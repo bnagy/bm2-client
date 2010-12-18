@@ -125,7 +125,7 @@ module CONN_CDB
         puts ".echo #{cookie=rand(2**32)}"
         mark=Time.now
         until qc_all =~ /#{cookie}/
-            sleep 1
+            sleep 0.1
             raise "#{COMPONENT}:#{VERSION}:#{__method__}: Timed out" if Time.now - mark > 3
         end
     end
@@ -177,7 +177,7 @@ module CONN_CDB
                         raise_win32_error if (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
                         raise_win32_error if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
                     ensure
-                        raise_win32_error if CloseHandle.call( hThread ).zero?
+                        CloseHandle.call( hThread )
                     end
                     return true if suspend_count==0
                 end
