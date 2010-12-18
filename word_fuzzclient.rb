@@ -43,9 +43,10 @@ class WordFuzzClient < FuzzClient
     end
 
     def clean_up( fn )
+        FileUtils.rm_f(fn)
         while File.exist? fn
-            FileUtils.rm_f(fn)
             sleep(0.1)
+            FileUtils.rm_f(fn)
         end
     end
 
@@ -54,11 +55,12 @@ class WordFuzzClient < FuzzClient
             @delivery_agent||=WordDeliveryAgent.new( 'debug'=>self.class.debug, 'visible'=>false )
             fname=prepare_test_file( test )
             status, details, chain=@delivery_agent.deliver( fname, delivery_options )
-            clean_up( fname )
             [status, details, chain]
         rescue
             warn $!
             ["error: #{$!}",'',[]]
+        ensure
+            clean_up( fname )
         end
     end
 
