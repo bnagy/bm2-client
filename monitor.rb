@@ -219,7 +219,7 @@ class Monitor
             # the ignore string is like "/8b08.*eax=00000/m" then that will
             # eval into a Regexp, and stay one.
             p exception
-            @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new((eval(ignore_string) rescue ignore_string)).match exception} 
+            @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string)).match exception} 
         }
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
