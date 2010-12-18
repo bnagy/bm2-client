@@ -218,6 +218,7 @@ class Monitor
             # and the literal string will get turned into Regexp /eax=00000000/. If
             # the ignore string is like "/8b08.*eax=00000/m" then that will
             # eval into a Regexp, and stay one.
+            p exception
             @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new((eval(ignore_string) rescue ignore_string)).match exception} 
         }
     rescue
