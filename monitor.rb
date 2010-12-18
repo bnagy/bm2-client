@@ -212,13 +212,7 @@ class Monitor
         unless output.scan(/frobozz/).length==output.scan(/xyzzy/).length
             raise RuntimeError, "#{COMPONENT}:#{VERSION}:#{__method__}: unfinished exception output."
         end
-        p @monitor_args['ignore_exceptions']
         output=~/second chance/i or output.scan( /frobozz(.*?)xyzzy/m ).flatten.any? {|exception|
-            # If the ignore string is like "eax=00000000" then eval will fail
-            # and the literal string will get turned into Regexp /eax=00000000/. If
-            # the ignore string is like "/8b08.*eax=00000/m" then that will
-            # eval into a Regexp, and stay one.
-            p exception
             @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string)).match exception} 
         }
     rescue
