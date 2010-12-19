@@ -75,7 +75,11 @@ class WordDeliveryAgent
         exception_data=''
         chain=''
         delivery_options=DELIVERY_DEFAULTS.merge( delivery_options )
-        raise "UNHANDLED CRASH!!" if @monitor.exception_data
+        if @monitor.exception_data
+            raise "UNHANDLED CRASH!!"
+            sleep 100
+            exit
+        end
         if delivery_options['clean'] or not (@word_conn && @word_conn.connected?)
             @monitor.reset
             setup_for_delivery( delivery_options )
