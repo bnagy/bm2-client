@@ -160,6 +160,7 @@ class Monitor
         @monitor_thread=Thread.new do
             @mark=Time.now
             @running=true
+            warn "#{COMPONENT}:#{VERSION}: Monitor thread started" if OPTS[:debug]
             raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
             raise "#{COMPONENT}:#{VERSION}: Uncleared hang" if @hang
             loop do
@@ -185,9 +186,10 @@ class Monitor
                 rescue
                     @running=false
                     warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} Set running to false " if OPTS[:debug]
-                    reset
+                    break
                 end
             end
+            reset
         end
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
@@ -266,6 +268,7 @@ class Monitor
     def clear_hang
         @hang=false
     end
+
     def destroy
         warn "#{COMPONENT}:#{VERSION}: Destroying." if OPTS[:debug]
         @debug_client.destroy_server
