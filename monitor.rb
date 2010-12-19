@@ -161,8 +161,7 @@ class Monitor
             @mark=Time.now
             @running=true
             warn "#{COMPONENT}:#{VERSION}: Monitor thread started" if OPTS[:debug]
-            raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
-            warn "#{COMPONENT}:#{VERSION}: Uncleared hang" if @hang
+            @hang=false
             loop do
                 begin
                     @pid=pid
@@ -225,7 +224,6 @@ class Monitor
 
     def start( app_pid, app_wid, arg_hsh={} )
         raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
-        raise "#{COMPONENT}:#{VERSION}: Uncleared hang" if @hang
         warn "#{COMPONENT}:#{VERSION}: Starting to monitor pid #{app_pid}" if OPTS[:debug]
         start_debugger( app_pid )
         raise RuntimeError, "#{COMPONENT}:#{VERSION}: Debugee PID mismatch" unless @debug_client.target_pid==app_pid
@@ -255,7 +253,7 @@ class Monitor
         warn "#{COMPONENT}:#{VERSION}: Prepping for new test #{filename}" if OPTS[:debug]
         raise "#{COMPONENT}:#{VERSION}: Unable to continue, monitor thread dead!" unless @monitor_thread.alive?
         raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
-        raise "#{COMPONENT}:#{VERSION}: Uncleared hang" if @hang
+        @hang=false
         @mark=Time.now 
         @debugger.dq_all
     rescue
@@ -265,10 +263,6 @@ class Monitor
 
     def clear_exception
         @exception_data=nil
-    end
-
-    def clear_hang
-        @hang=false
     end
 
     def destroy

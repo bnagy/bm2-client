@@ -107,24 +107,27 @@ class WordDeliveryAgent
             end
             status='fail'
         end
-        if @monitor.hang?
-            status='hang'
-            @monitor.clear_hang
+        begin
+            if @monitor.hang?
+                status='hang'
+            end
+            if @monitor.exception_data
+                status='crash'
+                exception_data=@monitor.exception_data
+                @monitor.clear_exception
+                chain=@current_chain if delivery_options['filechain']
+                debug_info "Chain length #{@current_chain.size}"
+            end
+            if status=='crash' or delivery_options['clean'] or @current_chain.size >= delivery_options['maxchain']
+                @word_conn.close
+                @word_conn=nil
+            end
+            @word_conn.close_documents rescue nil
+            debug_info "STATUS: #{status}"
+            [status,exception_data,chain]
+        rescue
+            warn $@
         end
-        if @monitor.exception_data
-            status='crash'
-            exception_data=@monitor.exception_data
-            @monitor.clear_exception
-            chain=@current_chain if delivery_options['filechain']
-            debug_info "Chain length #{@current_chain.size}"
-        end
-        if status=='crash' or delivery_options['clean'] or @current_chain.size >= delivery_options['maxchain']
-            @word_conn.close
-            @word_conn=nil
-        end
-        @word_conn.close_documents rescue nil
-        debug_info "STATUS: #{status}"
-        [status,exception_data,chain]
     end
 
     def destroy
