@@ -76,22 +76,20 @@ class WordDeliveryAgent
         chain=''
         delivery_options=DELIVERY_DEFAULTS.merge( delivery_options )
         if @monitor.exception_data
-            raise "UNHANDLED CRASH!!"
+            puts "UNHANDLED CRASH!!"
             sleep 100
             exit
         end
         if delivery_options['clean'] or not (@word_conn && @word_conn.connected?)
             @monitor.reset
             setup_for_delivery( delivery_options )
+        end
+        begin
             @monitor.new_test filename
-        else
-            begin
-                @monitor.new_test filename
-                @word_conn.visible=@agent_options['visible']
-            rescue
-                debug_info "Monitor reports fault in new_test, Setting up again."
-                setup_for_delivery( delivery_options )
-            end
+            @word_conn.visible=@agent_options['visible']
+        rescue
+            debug_info "Monitor reports fault in new_test, Setting up again."
+            setup_for_delivery( delivery_options )
         end
         # Always keep file chains, but only send them back
         # when the filechain option is set. Uses more RAM
@@ -127,6 +125,7 @@ class WordDeliveryAgent
             if status=='crash' or delivery_options['clean'] or @current_chain.size >= delivery_options['maxchain']
                 @word_conn.close
                 @word_conn=nil
+                @monitor.reset
             end
             @word_conn.close_documents rescue nil
             debug_info "STATUS: #{status}"
