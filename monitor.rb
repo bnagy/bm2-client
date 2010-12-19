@@ -172,12 +172,12 @@ class Monitor
                         debugger_output=@debugger.sync_qc
                         warn "#{COMPONENT}:#{VERSION}: Target #{@debug_client.target_pid} broken..." if OPTS[:debug]
                         if fatal_exception? debugger_output
-                            warn debugger_output if OPTS[:debug]
+                            warn debugger_output[-100..-1] if OPTS[:debug]
                             warn "#{COMPONENT}:#{VERSION}: Fatal exception. Killing debugee." if OPTS[:debug]
                             treat_as_fatal( debugger_output )
                         else
                             warn "#{COMPONENT}:#{VERSION}: Broken, but no fatal exception. Ignoring." if OPTS[:debug]
-                            warn debugger_output if OPTS[:debug]
+                            warn debugger_output[-100..-1] if OPTS[:debug]
                             @debugger.puts "g" 
                         end
                     end
@@ -252,7 +252,6 @@ class Monitor
         warn "#{COMPONENT}:#{VERSION}: Prepping for new test #{filename}" if OPTS[:debug]
         raise "#{COMPONENT}:#{VERSION}: Unable to continue, monitor thread dead!" unless @monitor_thread.alive?
         raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
-        @hang=false
         @mark=Time.now 
         @debugger.dq_all
     rescue
