@@ -173,6 +173,7 @@ class Monitor
                         debugger_output=@debugger.sync_dq
                         warn "#{COMPONENT}:#{VERSION}: Target #{@debug_client.target_pid} broken..." if OPTS[:debug]
                         if fatal_exception? debugger_output
+                            warn debugger_output if OPTS[:debug]
                             warn "#{COMPONENT}:#{VERSION}: Fatal exception. Killing debugee." if OPTS[:debug]
                             treat_as_fatal( debugger_output )
                         else

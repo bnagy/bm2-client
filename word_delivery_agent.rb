@@ -123,6 +123,7 @@ class WordDeliveryAgent
             @word_conn=nil
         end
         @word_conn.close_documents rescue nil
+        debug_info "STATUS: #{status}"
         [status,exception_data,chain]
     end
 

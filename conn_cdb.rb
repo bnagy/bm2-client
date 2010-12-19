@@ -32,7 +32,7 @@ module CONN_CDB
         unless (error_code=GetLastError.call) == ERROR_SUCCESS 
             msg = ' ' * 255 
             FormatMessage.call(0x3000, 0, error_code, 0, msg, 255, '') 
-            raise "#{COMPONENT}:#{VERSION}: #{str} Win32 Exception: #{msg.gsub!(/\000/, '').strip!}" 
+            raise "#{COMPONENT}:#{VERSION}: #{str} Win32 Exception: #{msg.gsub!(/\000/, '').strip! rescue ''}" 
         else 
             raise 'GetLastError returned ERROR_SUCCESS' 
         end 
@@ -175,7 +175,9 @@ module CONN_CDB
                     begin
                         raise_win32_error("OpenThread #{tid}") if (hThread=OpenThread.call( THREAD_SUSPEND_RESUME,0,tid )).zero?
                         if (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
-                            return true # if it can't be suspended, it's running.
+                            # This is a guess, but I'm going to assume that 
+                            # if it can't be suspended then it's running.
+                            return true
                         else
                             raise_win32_error("ResumeThread") if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
                         end
