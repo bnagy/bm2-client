@@ -125,7 +125,6 @@ class WordDeliveryAgent
             if status=='crash' or delivery_options['clean'] or @current_chain.size >= delivery_options['maxchain']
                 @word_conn.close
                 @word_conn=nil
-                @monitor.reset
             end
             @word_conn.close_documents rescue nil
             debug_info "STATUS: #{status}"
