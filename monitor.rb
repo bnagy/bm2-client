@@ -158,7 +158,6 @@ class Monitor
         raise RuntimeError, "#{COMPONENT}:#{VERSION}: Debugger not initialized yet!" unless @debugger
         @monitor_thread.kill if @monitor_thread
         @monitor_thread=Thread.new do
-            @mark=Time.now
             @running=true
             warn "#{COMPONENT}:#{VERSION}: Monitor thread started" if OPTS[:debug]
             loop do
@@ -222,7 +221,6 @@ class Monitor
     end
 
     def start( app_pid, app_wid, arg_hsh={} )
-        raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
         warn "#{COMPONENT}:#{VERSION}: Starting to monitor pid #{app_pid}" if OPTS[:debug]
         start_debugger( app_pid )
         raise RuntimeError, "#{COMPONENT}:#{VERSION}: Debugee PID mismatch" unless @debug_client.target_pid==app_pid

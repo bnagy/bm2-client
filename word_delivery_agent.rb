@@ -79,6 +79,7 @@ class WordDeliveryAgent
         if delivery_options['clean'] or not (@word_conn && @word_conn.connected?)
             @monitor.reset
             setup_for_delivery( delivery_options )
+            @monitor.new_test filename
         else
             begin
                 @monitor.new_test filename
@@ -128,6 +129,7 @@ class WordDeliveryAgent
             [status,exception_data,chain]
         rescue
             warn $@
+            raise $!
         end
     end
 
