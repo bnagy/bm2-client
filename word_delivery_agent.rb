@@ -110,6 +110,7 @@ class WordDeliveryAgent
         begin
             if @monitor.hang?
                 status='hang'
+                @monitor.clear_hang
             end
             if @monitor.exception_data
                 status='crash'

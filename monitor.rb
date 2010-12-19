@@ -161,7 +161,6 @@ class Monitor
             @mark=Time.now
             @running=true
             warn "#{COMPONENT}:#{VERSION}: Monitor thread started" if OPTS[:debug]
-            @hang=false
             loop do
                 begin
                     @pid=pid
@@ -263,6 +262,10 @@ class Monitor
 
     def clear_exception
         @exception_data=nil
+    end
+
+    def clear_hang
+        @hang=false
     end
 
     def destroy
