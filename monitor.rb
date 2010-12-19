@@ -162,7 +162,7 @@ class Monitor
             @running=true
             warn "#{COMPONENT}:#{VERSION}: Monitor thread started" if OPTS[:debug]
             raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
-            raise "#{COMPONENT}:#{VERSION}: Uncleared hang" if @hang
+            warn "#{COMPONENT}:#{VERSION}: Uncleared hang" if @hang
             loop do
                 begin
                     @pid=pid
