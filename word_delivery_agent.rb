@@ -97,11 +97,7 @@ class WordDeliveryAgent
         begin
             @word_conn.blocking_write( filename )
             raise unless @monitor.running?
-            if @monitor.hang?
-                status='hang'
-            else
-                status='success'
-            end
+            status='success'
         rescue
             unless @monitor.running?
                 raise "#{COMPONENT}:#{VERSION} Too many faults, giving up." if (retry_count-=1)<=0
@@ -109,11 +105,11 @@ class WordDeliveryAgent
                 setup_for_delivery( delivery_options, preserve_chain=true )
                 retry
             end
-            if @monitor.hang?
-                status='hang'
-            else
-                status='fail'
-            end
+            status='fail'
+        end
+        if @monitor.hang
+            status='hang'
+            @monitor.clear_hang
         end
         if @monitor.exception_data
             status='crash'

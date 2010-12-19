@@ -161,7 +161,7 @@ class Monitor
             @mark=Time.now
             @running=true
             raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
-            @hang=false
+            raise "#{COMPONENT}:#{VERSION}: Uncleared hang" if @hang
             loop do
                 begin
                     @pid=pid
@@ -262,6 +262,9 @@ class Monitor
         @exception_data=nil
     end
 
+    def clear_hang
+        @hang=false
+    end
     def destroy
         warn "#{COMPONENT}:#{VERSION}: Destroying." if OPTS[:debug]
         @debug_client.destroy_server
