@@ -107,7 +107,7 @@ class WordDeliveryAgent
             end
             status='fail'
         end
-        if @monitor.hang
+        if @monitor.hang?
             status='hang'
             @monitor.clear_hang
         end
