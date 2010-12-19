@@ -57,10 +57,10 @@ class Monitor
         @debugger.puts <<-eos
  !load winext\\msec.dll
  .sympath c:\\localsymbols
- sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" av
- sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" sbo
- sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" ii
- sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" gp
+ sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" -c2 ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" av
+ sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" -c2 ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" sbo
+ sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" -c2 ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" ii
+ sxe -c ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" -c2 ".echo frobozz;r;~;kv;u @eip;!exploitable -m;.echo xyzzy" gp
  sxi e0000001
  sxi e0000002
  eos
@@ -170,7 +170,7 @@ class Monitor
                     if @debugger.target_running?
                         check_for_timeout
                     else
-                        debugger_output=@debugger.sync_dq
+                        debugger_output=@debugger.sync_qc
                         warn "#{COMPONENT}:#{VERSION}: Target #{@debug_client.target_pid} broken..." if OPTS[:debug]
                         if fatal_exception? debugger_output
                             warn debugger_output if OPTS[:debug]
