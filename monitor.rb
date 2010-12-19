@@ -46,6 +46,7 @@ class Monitor
         system("start cmd /k ruby drb_debug_server.rb -p #{OPTS[:port]+1} #{OPTS[:debug]? ' -d' : ''}")
         start_sweeper_thread
         @debug_client=DebugClient.new('127.0.0.1', OPTS[:port]+1)
+        @tick_count=0
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
         raise $!
@@ -159,11 +160,13 @@ class Monitor
         @monitor_thread.kill if @monitor_thread
         @monitor_thread=Thread.new do
             @running=true
+            @tick_count=0
             warn "#{COMPONENT}:#{VERSION}: Monitor thread started" if OPTS[:debug]
             loop do
                 begin
                     @pid=pid
                     sleep 1
+                    @tick_count+=1
                     raise RuntimeError, "PID Mismatch" unless @pid==@debug_client.target_pid
                     if @debugger.target_running?
                         check_for_timeout
@@ -200,6 +203,14 @@ class Monitor
 
     def hang?
         @hang
+    end
+
+    def last_tick
+        return unless @monitor_thread.alive? and running?
+        now=@tick_count
+        loop do
+            break if @tick_count > now
+        end
     end
 
     def get_minidump

@@ -111,6 +111,8 @@ class WordDeliveryAgent
             status='fail'
         end
         begin
+            @word_conn.close_documents rescue nil
+            @monitor.last_tick
             if @monitor.hang?
                 status='hang'
                 @monitor.clear_hang
@@ -126,7 +128,6 @@ class WordDeliveryAgent
                 @word_conn.close
                 @word_conn=nil
             end
-            @word_conn.close_documents rescue nil
             debug_info "STATUS: #{status}"
             [status,exception_data,chain]
         rescue
