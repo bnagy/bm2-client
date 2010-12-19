@@ -160,7 +160,6 @@ class Monitor
         @monitor_thread=Thread.new do
             @mark=Time.now
             @running=true
-            @exception_data=false
             @hang=false
             loop do
                 begin

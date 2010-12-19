@@ -96,8 +96,18 @@ class WordDeliveryAgent
         begin
             @word_conn.blocking_write( filename )
             raise unless @monitor.running?
-            # As soon as the deliver method doesn't raise an exception, we lose interest.
-            status='success'
+            if @monitor.exception_data
+                status='crash'
+                exception_data=@monitor.exception_data
+                chain=@current_chain if delivery_options['filechain']
+                debug_info "Chain length #{@current_chain.size}"
+            else
+                if @monitor.hang?
+                    status='hang'
+                else
+                    status='success'
+                end
+            end
         rescue
             unless @monitor.running?
                 raise "#{COMPONENT}:#{VERSION} Too many faults, giving up." if (retry_count-=1)<=0
