@@ -251,6 +251,7 @@ class Monitor
         warn "#{COMPONENT}:#{VERSION}: Prepping for new test #{filename}" if OPTS[:debug]
         raise "#{COMPONENT}:#{VERSION}: Unable to continue, monitor thread dead!" unless @monitor_thread.alive?
         raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
+        raise "#{COMPONENT}:#{VERSION}: Uncleared hang" if @hang
         @mark=Time.now 
         @debugger.dq_all
     rescue
