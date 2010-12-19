@@ -160,7 +160,7 @@ class Monitor
         @monitor_thread=Thread.new do
             @mark=Time.now
             @running=true
-            @exception_data=false
+            raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
             @hang=false
             loop do
                 begin
@@ -250,12 +250,16 @@ class Monitor
     def new_test( filename )
         warn "#{COMPONENT}:#{VERSION}: Prepping for new test #{filename}" if OPTS[:debug]
         raise "#{COMPONENT}:#{VERSION}: Unable to continue, monitor thread dead!" unless @monitor_thread.alive?
+        raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
         @mark=Time.now 
         @debugger.dq_all
-        @exception_data=nil
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
         raise $!
+    end
+
+    def clear_exception
+        @exception_data=nil
     end
 
     def destroy

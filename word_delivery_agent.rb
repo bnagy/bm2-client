@@ -75,6 +75,7 @@ class WordDeliveryAgent
         exception_data=''
         chain=''
         delivery_options=DELIVERY_DEFAULTS.merge( delivery_options )
+        raise "UNHANDLED CRASH!!" if @monitor.exception_data
         if delivery_options['clean'] or not (@word_conn && @word_conn.connected?)
             @monitor.reset
             setup_for_delivery( delivery_options )
@@ -96,17 +97,10 @@ class WordDeliveryAgent
         begin
             @word_conn.blocking_write( filename )
             raise unless @monitor.running?
-            if @monitor.exception_data
-                status='crash'
-                exception_data=@monitor.exception_data
-                chain=@current_chain if delivery_options['filechain']
-                debug_info "Chain length #{@current_chain.size}"
+            if @monitor.hang?
+                status='hang'
             else
-                if @monitor.hang?
-                    status='hang'
-                else
-                    status='success'
-                end
+                status='success'
             end
         rescue
             unless @monitor.running?
@@ -115,18 +109,18 @@ class WordDeliveryAgent
                 setup_for_delivery( delivery_options, preserve_chain=true )
                 retry
             end
-            if @monitor.exception_data
-                status='crash'
-                exception_data=@monitor.exception_data
-                chain=@current_chain if delivery_options['filechain']
-                debug_info "Chain length #{@current_chain.size}"
+            if @monitor.hang?
+                status='hang'
             else
-                if @monitor.hang?
-                    status='hang'
-                else
-                    status='fail'
-                end
+                status='fail'
             end
+        end
+        if @monitor.exception_data
+            status='crash'
+            exception_data=@monitor.exception_data
+            @monitor.clear_exception
+            chain=@current_chain if delivery_options['filechain']
+            debug_info "Chain length #{@current_chain.size}"
         end
         if status=='crash' or delivery_options['clean'] or @current_chain.size >= delivery_options['maxchain']
             @word_conn.close
