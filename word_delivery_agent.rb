@@ -84,6 +84,7 @@ class WordDeliveryAgent
             setup_for_delivery( delivery_options )
         end
         begin
+            @word_conn.close_documents
             @monitor.new_test filename
             @word_conn.visible=@agent_options['visible']
         rescue
@@ -98,8 +99,6 @@ class WordDeliveryAgent
         retry_count=RETRIES
         begin
             @word_conn.blocking_write( filename )
-            raise unless @monitor.running?
-            @word_conn.close_documents
             raise unless @monitor.running?
             status='success'
         rescue
@@ -116,7 +115,7 @@ class WordDeliveryAgent
             if @monitor.hang?
                 status='hang'
                 @monitor.clear_hang
-                @word_conn.close
+                @word_conn.close rescue nil
                 @word_conn=nil
             end
             if @monitor.exception_data
@@ -125,18 +124,18 @@ class WordDeliveryAgent
                 @monitor.clear_exception
                 chain=@current_chain if delivery_options['filechain']
                 debug_info "Chain length #{@current_chain.size}"
-                @word_conn.close
+                @word_conn.close rescue nil
                 @word_conn=nil
             end
             if delivery_options['clean'] or @current_chain.size >= delivery_options['maxchain']
-                @word_conn.close
+                @word_conn.close rescue nil
                 @word_conn=nil
             end
             debug_info "STATUS: #{status}"
             [status,exception_data,chain]
         rescue
             warn $@
-            raise $!
+            exit
         end
     end
 

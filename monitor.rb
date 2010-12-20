@@ -19,7 +19,7 @@ class Monitor
     COMPONENT="Monitor"
     VERSION="1.5.0"
     MONITOR_DEFAULTS={
-        'timeout'=>15,
+        'timeout'=>20,
         'ignore_exceptions'=>[],
         'kill_dialogs'=>true
     }
@@ -144,7 +144,6 @@ class Monitor
                 warn "#{COMPONENT}:#{VERSION}: No exception after hang" if OPTS[:debug]
                 @debug_client.close_debugger if @debugger
                 @debugger=nil
-                warn "#{__method__} Monitor thread killed debugger, about to try and exit"
                 Thread.exit
             end
         end
@@ -158,7 +157,6 @@ class Monitor
         @exception_data=debugger_output
         @debug_client.close_debugger if @debugger
         @debugger=nil
-        warn "#{__method__} Monitor thread killed debugger, about to try and exit"
         Thread.exit
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
@@ -198,7 +196,6 @@ class Monitor
                     warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} Set running to false " if OPTS[:debug]
                     @debug_client.close_debugger if @debugger
                     @debugger=nil
-                    warn "#{__method__} Monitor thread killed debugger, about to try and exit"
                     Thread.exit
                 end
             end
@@ -251,17 +248,14 @@ class Monitor
         start_monitor_thread( app_pid )
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
-        reset
         raise $!
     end
 
     def reset
+        # Only called externally
         warn "#{COMPONENT}:#{VERSION}: Reset called, debugger #{@debug_client.debugger_pid rescue 0}." if OPTS[:debug]
-        warn "Running is #{@running}"
         @debug_client.close_debugger if @debugger
-        warn "Killed debugger"
         Thread.kill( @monitor_thread ) if @monitor_thread
-        warn "Monitor thread dead"
         @debugger=nil
         warn "#{COMPONENT}:#{VERSION}: Reset." if OPTS[:debug]
     rescue
