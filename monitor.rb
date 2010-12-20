@@ -153,6 +153,7 @@ class Monitor
     def treat_as_fatal( debugger_output )
         get_minidump if @monitor_args['minidump']
         @exception_data=debugger_output
+        warn @exception_data.inspect
         @debug_client.close_debugger if @debugger
         @debugger=nil
         Thread.exit
@@ -235,16 +236,12 @@ class Monitor
             raise RuntimeError, "#{COMPONENT}:#{VERSION}:#{__method__}: unfinished exception output."
         end
         # Does the most recent exception match none of the ignore regexps?
-        output=~/second chance/i or (output=~/frobozz/ and output.split(/frobozz/ ).last {|exception|
-            @monitor_args['ignore_exceptions'].none? {|ignore_string| 
-                warn "EXCEPTION"
+        output=~/second chance/i or output=~/frobozz/ && output.split(/frobozz/ ).last {|exception|
                 warn exception
-                warn ignore_string
-                res=Regexp.new(eval(ignore_string)).match( exception)
-                warn res
-                res
+            @monitor_args['ignore_exceptions'].none? {|ignore_string| 
+                Regexp.new(eval(ignore_string)).match( exception)
             } 
-        })
+        }
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
         raise $!
