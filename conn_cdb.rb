@@ -43,7 +43,6 @@ module CONN_CDB
         raise ArgumentError, "CONN_CDB: No Pid to attach to!" unless arg_hash['pid']
         @target_pid=arg_hash['pid']
         begin
-            command=(arg_hash['path'] || CDB_PATH)+"-p #{arg_hash['pid']} "+"#{arg_hash['options']}"
             @cdb_app=WindowsPipe.popen( (arg_hash['path'] || CDB_PATH)+"-p #{arg_hash['pid']} "+"#{arg_hash['options']}" )
         rescue
             $sterr.puts $!
@@ -95,6 +94,7 @@ module CONN_CDB
             # thread, which ends up leaking thread handles when the process is 
             # suspended and then the debugger exits.
             @cdb_app.close if @cdb_app
+            Process.kill( 9, target_pid ) rescue nil
             # Right now, windows kills CDB when the last handle to it is
             # closed, which also kills the target.
             @cdb_app=nil # for if destroy_connection gets called twice
