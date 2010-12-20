@@ -190,7 +190,7 @@ class Monitor
                 rescue
                     @running=false
                     warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} Set running to false " if OPTS[:debug]
-                    break
+                    reset
                 end
             end
         end
