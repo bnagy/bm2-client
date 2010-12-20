@@ -251,6 +251,7 @@ class Monitor
         warn "#{COMPONENT}:#{VERSION}: Reset called, debugger #{@debug_client.debugger_pid rescue 0}." if OPTS[:debug]
         warn "Running is #{@running}"
         @debug_client.close_debugger if @debugger
+        @monitor_thread.kill if @monitor_thread
         @debugger=nil
         warn "#{COMPONENT}:#{VERSION}: Reset." if OPTS[:debug]
     rescue
@@ -261,6 +262,7 @@ class Monitor
     def new_test( filename )
         warn "#{COMPONENT}:#{VERSION}: Prepping for new test #{filename}" if OPTS[:debug]
         raise "#{COMPONENT}:#{VERSION}: Unable to continue, monitor thread dead!" unless @monitor_thread.alive?
+        raise "#{COMPONENT}:#{VERSION}: Unable to continue, no debugger" unless @debugger
         raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
         @mark=Time.now 
         @debugger.dq_all
