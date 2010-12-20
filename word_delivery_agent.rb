@@ -99,6 +99,7 @@ class WordDeliveryAgent
         retry_count=RETRIES
         begin
             @word_conn.blocking_write( filename )
+            @word_conn.close_documents
             raise unless @monitor.running?
             status='success'
         rescue
@@ -110,9 +111,7 @@ class WordDeliveryAgent
             end
             status='fail'
         end
-        sleep 0.1 # magic sleeps ftw!
         begin
-            @word_conn.close_documents rescue nil
             @monitor.last_tick
             if @monitor.hang?
                 status='hang'
