@@ -236,12 +236,11 @@ class Monitor
             raise RuntimeError, "#{COMPONENT}:#{VERSION}:#{__method__}: unfinished exception output."
         end
         # Does the most recent exception match none of the ignore regexps?
-        output=~/second chance/i or output=~/frobozz/ && output.split(/frobozz/ ).last {|exception|
-                warn exception
+        output=~/second chance/i or (output=~/frobozz/ && output.split(/frobozz/ ).last {|exception|
             @monitor_args['ignore_exceptions'].none? {|ignore_string| 
-                Regexp.new(eval(ignore_string)).match( exception)
+                Regexp.new(eval(ignore_string)).match( exception )
             } 
-        }
+        })
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
         raise $!
