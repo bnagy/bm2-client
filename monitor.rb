@@ -232,11 +232,11 @@ class Monitor
     end
 
     def fatal_exception?( output )
-        # Do any of the exceptions match none of the ignore regexps?
         unless output.scan(/frobozz/).length==output.scan(/xyzzy/).length
             raise RuntimeError, "#{COMPONENT}:#{VERSION}:#{__method__}: unfinished exception output."
         end
-        output=~/second chance/i or output.scan( /frobozz(.*?)xyzzy/m ).flatten.any? {|exception|
+        # Does the most recent exception match none of the ignore regexps?
+        output=~/second chance/i or output.split(/frobozz/ ).last {|exception|
             @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string)).match exception} 
         }
     rescue
