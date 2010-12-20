@@ -39,8 +39,6 @@ class Monitor
     GetWindow=Win32API.new("user32.dll", "GetWindow", 'LI','I')
     PostMessage=Win32API.new("user32.dll", "PostMessage", 'LILL','I')
 
-    attr_reader :exception_data
-
     def initialize
         warn "#{COMPONENT}:#{VERSION}: Spawning debug server on #{OPTS[:port]+1}..." if OPTS[:debug]
         system("start cmd /k ruby drb_debug_server.rb -p #{OPTS[:port]+1} #{OPTS[:debug]? ' -d' : ''}")
@@ -215,6 +213,10 @@ class Monitor
 
     def hang?
         @hang
+    end
+
+    def exception_data
+        @exception_data
     end
 
     def last_tick
