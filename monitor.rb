@@ -190,7 +190,10 @@ class Monitor
                 rescue
                     @running=false
                     warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} Set running to false " if OPTS[:debug]
-                    reset
+                    @debug_client.close_debugger if @debugger
+                    @debugger=nil
+                    warn "Monitor thread killed debugger, about to try and exit"
+                    Thread.exit!
                 end
             end
         end
@@ -252,7 +255,7 @@ class Monitor
         warn "Running is #{@running}"
         @debug_client.close_debugger if @debugger
         warn "Killed debugger"
-        @monitor_thread.kill if @monitor_thread
+        Thread.kill( @monitor_thread ) if @monitor_thread
         warn "Monitor thread dead"
         @debugger=nil
         warn "#{COMPONENT}:#{VERSION}: Reset." if OPTS[:debug]
