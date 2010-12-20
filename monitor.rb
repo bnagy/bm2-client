@@ -251,8 +251,6 @@ class Monitor
         warn "#{COMPONENT}:#{VERSION}: Reset called, debugger #{@debug_client.debugger_pid rescue 0}." if OPTS[:debug]
         warn "Running is #{@running}"
         @debug_client.close_debugger if @debugger
-        @monitor_thread.kill if @monitor_thread
-        @dk_thread.kill if @dk_thread
         @debugger=nil
         warn "#{COMPONENT}:#{VERSION}: Reset." if OPTS[:debug]
     rescue
