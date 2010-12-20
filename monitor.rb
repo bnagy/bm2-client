@@ -153,7 +153,6 @@ class Monitor
     def treat_as_fatal( debugger_output )
         get_minidump if @monitor_args['minidump']
         @exception_data=debugger_output
-        warn @exception_data.inspect
         @debug_client.close_debugger if @debugger
         @debugger=nil
         Thread.exit
@@ -182,6 +181,7 @@ class Monitor
                         warn "#{COMPONENT}:#{VERSION}: Target #{@debug_client.target_pid} broken..." if OPTS[:debug]
                         if fatal_exception? debugger_output
                             warn "#{COMPONENT}:#{VERSION}: Fatal exception. Killing debugee." if OPTS[:debug]
+                            warn debugger_output[-500..-1] if OPTS[:debug]
                             treat_as_fatal( debugger_output )
                         else
                             warn "#{COMPONENT}:#{VERSION}: Broken, but no fatal exception. Ignoring." if OPTS[:debug]
@@ -194,7 +194,6 @@ class Monitor
                     warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} Set running to false " if OPTS[:debug]
                     @debug_client.close_debugger if @debugger
                     @debugger=nil
-                    warn "#{__method__} Monitor thread killed debugger, about to try and exit"
                     Thread.exit
                 end
             end
@@ -235,11 +234,11 @@ class Monitor
         unless output.scan(/frobozz/).length==output.scan(/xyzzy/).length
             raise RuntimeError, "#{COMPONENT}:#{VERSION}:#{__method__}: unfinished exception output."
         end
-        # Does the most recent exception match none of the ignore regexps?
         return true if output=~/second chance/i
         return false unless output=~/frobozz/
+        # Does the most recent exception match none of the ignore regexps?
         output.split(/frobozz/).last {|exception|
-            @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string)).match exception} 
+            @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string))=~exception} 
         }
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
@@ -260,14 +259,10 @@ class Monitor
     end
 
     def reset
-        warn "#{COMPONENT}:#{VERSION}: Reset called, debugger #{@debug_client.debugger_pid rescue 0}." if OPTS[:debug]
-        warn "Running is #{@running}"
+        warn "#{COMPONENT}:#{VERSION}: Reset called, debugger #{@debug_client.debugger_pid rescue 0}, running - #{@running}" if OPTS[:debug]
         @debug_client.close_debugger if @debugger
-        warn "Killed debugger"
         Thread.kill( @monitor_thread ) if @monitor_thread
-        warn "Monitor thread dead"
         @debugger=nil
-        warn "#{COMPONENT}:#{VERSION}: Reset." if OPTS[:debug]
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
         raise $!

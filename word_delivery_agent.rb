@@ -97,7 +97,6 @@ class WordDeliveryAgent
         @current_chain << File.open( filename, "rb") {|io| io.read}
         retry_count=RETRIES
         begin
-            warn "About to deliver"
             @word_conn.blocking_write( filename ).close
             raise unless @monitor.running?
             status='success'
