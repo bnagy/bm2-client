@@ -240,7 +240,7 @@ class Monitor
         exception=output.split(/frobozz/i).last
         puts exception
         puts @monitor_args['ignore_exceptions']
-        @monitor_args['ignore_exceptions'].none? {|ignore_string| exception=~(Regexp.new(eval(ignore_string))} 
+        @monitor_args['ignore_exceptions'].none? {|ignore_string| exception=~(Regexp.new(eval(ignore_string)))} 
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
         raise $!
