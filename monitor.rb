@@ -134,7 +134,7 @@ class Monitor
         if Time.now - @mark > @monitor_args['timeout']
             warn "#{COMPONENT}:#{VERSION}: Timeout (#{Time.now - @mark}) Exceeded." if OPTS[:debug]
             @hang=true
-            debugger_output=@debugger.sync_qc
+            debugger_output=@debugger.sync_dq
             if fatal_exception? debugger_output
                 warn "#{COMPONENT}:#{VERSION}: Fatal exception after hang" if OPTS[:debug]
                 treat_as_fatal( debugger_output )
@@ -238,6 +238,7 @@ class Monitor
         return false unless output=~/frobozz/
         # Does the most recent exception match none of the ignore regexps?
         output.split(/frobozz/).last {|exception|
+            warn exception
             @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string))=~exception} 
         }
     rescue
