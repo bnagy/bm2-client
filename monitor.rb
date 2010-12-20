@@ -134,7 +134,7 @@ class Monitor
         if Time.now - @mark > @monitor_args['timeout']
             warn "#{COMPONENT}:#{VERSION}: Timeout (#{Time.now - @mark}) Exceeded." if OPTS[:debug]
             @hang=true
-            debugger_output=@debugger.sync_dq
+            debugger_output=@debugger.sync_qc
             if fatal_exception? debugger_output
                 warn "#{COMPONENT}:#{VERSION}: Fatal exception after hang" if OPTS[:debug]
                 treat_as_fatal( debugger_output )
@@ -142,7 +142,6 @@ class Monitor
                 warn "#{COMPONENT}:#{VERSION}: No exception after hang" if OPTS[:debug]
                 @debug_client.close_debugger if @debugger
                 @debugger=nil
-                warn "#{__method__} Monitor thread killed debugger, about to try and exit"
                 Thread.exit
             end
         end
@@ -153,11 +152,9 @@ class Monitor
 
     def treat_as_fatal( debugger_output )
         get_minidump if @monitor_args['minidump']
-        warn debugger_output
         @exception_data=debugger_output
         @debug_client.close_debugger if @debugger
         @debugger=nil
-        warn "#{__method__} Monitor thread killed debugger, about to try and exit"
         Thread.exit
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
@@ -183,7 +180,6 @@ class Monitor
                         debugger_output=@debugger.sync_qc
                         warn "#{COMPONENT}:#{VERSION}: Target #{@debug_client.target_pid} broken..." if OPTS[:debug]
                         if fatal_exception? debugger_output
-                            warn debugger_output[-500..-1] if OPTS[:debug]
                             warn "#{COMPONENT}:#{VERSION}: Fatal exception. Killing debugee." if OPTS[:debug]
                             treat_as_fatal( debugger_output )
                         else
@@ -239,9 +235,16 @@ class Monitor
             raise RuntimeError, "#{COMPONENT}:#{VERSION}:#{__method__}: unfinished exception output."
         end
         # Does the most recent exception match none of the ignore regexps?
-        output=~/second chance/i or output=~/frobozz/ and output.split(/frobozz/ ).last {|exception|
-            @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string)).match exception} 
-        }
+        output=~/second chance/i or (output=~/frobozz/ and output.split(/frobozz/ ).last {|exception|
+            @monitor_args['ignore_exceptions'].none? {|ignore_string| 
+                warn "EXCEPTION"
+                warn exception
+                warn ignore_string
+                res=Regexp.new(eval(ignore_string)).match( exception)
+                warn res
+                res
+            } 
+        })
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
         raise $!
