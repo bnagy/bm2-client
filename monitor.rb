@@ -153,6 +153,7 @@ class Monitor
 
     def treat_as_fatal( debugger_output )
         get_minidump if @monitor_args['minidump']
+        warn debugger_output
         @exception_data=debugger_output
         @debug_client.close_debugger if @debugger
         @debugger=nil
