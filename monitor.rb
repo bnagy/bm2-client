@@ -220,7 +220,9 @@ class Monitor
     def last_tick
         now=@tick_count
         until @tick_count > now
-            return unless (@monitor_thread.alive? and running?)
+            unless (@monitor_thread.alive? and running?)
+                sleep 0.5 and return
+            end
         end
     end
 

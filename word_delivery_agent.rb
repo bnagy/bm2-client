@@ -84,7 +84,6 @@ class WordDeliveryAgent
             setup_for_delivery( delivery_options )
         end
         begin
-            @word_conn.close_documents unless delivery_options['clean']
             @monitor.new_test filename
             @word_conn.visible=@agent_options['visible']
         rescue
@@ -99,8 +98,9 @@ class WordDeliveryAgent
         retry_count=RETRIES
         begin
             warn "About to deliver"
-            @word_conn.blocking_write( filename )
+            doc=@word_conn.blocking_write( filename )
             raise unless @monitor.running?
+            doc.close
             status='success'
         rescue
             unless @monitor.running?
