@@ -145,7 +145,7 @@ class Monitor
                 @debug_client.close_debugger if @debugger
                 @debugger=nil
                 warn "#{__method__} Monitor thread killed debugger, about to try and exit"
-                Thread.exit!
+                exit
             end
         end
     rescue
@@ -159,7 +159,7 @@ class Monitor
         @debug_client.close_debugger if @debugger
         @debugger=nil
         warn "#{__method__} Monitor thread killed debugger, about to try and exit"
-        Thread.exit!
+        exit
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
         raise $!
@@ -199,7 +199,7 @@ class Monitor
                     @debug_client.close_debugger if @debugger
                     @debugger=nil
                     warn "#{__method__} Monitor thread killed debugger, about to try and exit"
-                    Thread.exit!
+                    exit
                 end
             end
         end
