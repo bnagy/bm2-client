@@ -239,6 +239,7 @@ class Monitor
         end
         # Does the most recent exception match none of the ignore regexps?
         output=~/second chance/i or output.split(/frobozz/ ).last {|exception|
+            return if exception.empty?
             @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string)).match exception} 
         }
     rescue
