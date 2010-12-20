@@ -177,7 +177,7 @@ module CONN_CDB
                         if (suspend_count=SuspendThread.call( hThread ))==INVALID_HANDLE_VALUE
                             # This is a guess, but I'm going to assume that 
                             # if it can't be suspended then it's running.
-                            return true
+                            #return true
                         else
                             raise_win32_error("ResumeThread") if (ResumeThread.call( hThread ))==INVALID_HANDLE_VALUE
                         end
