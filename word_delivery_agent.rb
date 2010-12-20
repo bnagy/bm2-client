@@ -76,8 +76,7 @@ class WordDeliveryAgent
         chain=''
         delivery_options=DELIVERY_DEFAULTS.merge( delivery_options )
         if @monitor.exception_data
-            puts "UNHANDLED CRASH!!"
-            sleep 100
+            puts "UNHANDLED CRASH!!" # the ultimate sin
             exit
         end
         if delivery_options['clean'] or not (@word_conn && @word_conn.connected?)
@@ -116,6 +115,8 @@ class WordDeliveryAgent
             if @monitor.hang?
                 status='hang'
                 @monitor.clear_hang
+                @word_conn.close
+                @word_conn=nil
             end
             if @monitor.exception_data
                 status='crash'
@@ -123,8 +124,10 @@ class WordDeliveryAgent
                 @monitor.clear_exception
                 chain=@current_chain if delivery_options['filechain']
                 debug_info "Chain length #{@current_chain.size}"
+                @word_conn.close
+                @word_conn=nil
             end
-            if status=='crash' or delivery_options['clean'] or @current_chain.size >= delivery_options['maxchain']
+            if delivery_options['clean'] or @current_chain.size >= delivery_options['maxchain']
                 @word_conn.close
                 @word_conn=nil
             end
