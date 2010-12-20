@@ -237,11 +237,8 @@ class Monitor
         return true if output=~/second chance/i
         return false unless output=~/frobozz/
         # Does the most recent exception match none of the ignore regexps?
-        puts output.split(/frobozz/).last
-        puts "in fatal_exception"
-        output.split(/frobozz/).last {|exception|
-            @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string))=~exception} 
-        }
+        exception=output.split(/frobozz/).last
+        @monitor_args['ignore_exceptions'].none? {|ignore_string| Regexp.new(eval(ignore_string))=~exception} 
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
         raise $!
