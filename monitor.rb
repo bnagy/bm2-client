@@ -264,6 +264,7 @@ class Monitor
         @debug_client.close_debugger if @debugger
         Thread.kill( @monitor_thread ) if @monitor_thread
         @debugger=nil
+        clear_hang
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
         raise $!
