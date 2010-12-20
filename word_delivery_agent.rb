@@ -98,6 +98,7 @@ class WordDeliveryAgent
         retry_count=RETRIES
         begin
             @word_conn.blocking_write( filename )
+            raise unless @monitor.running?
             @word_conn.close_documents
             raise unless @monitor.running?
             status='success'
