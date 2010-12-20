@@ -144,7 +144,7 @@ class Monitor
                 warn "#{COMPONENT}:#{VERSION}: No exception after hang" if OPTS[:debug]
                 @debug_client.close_debugger if @debugger
                 @debugger=nil
-                warn "Monitor thread killed debugger, about to try and exit"
+                warn "#{__method__} Monitor thread killed debugger, about to try and exit"
                 Thread.exit!
             end
         end
@@ -158,7 +158,7 @@ class Monitor
         @exception_data=debugger_output
         @debug_client.close_debugger if @debugger
         @debugger=nil
-        warn "Monitor thread killed debugger, about to try and exit"
+        warn "#{__method__} Monitor thread killed debugger, about to try and exit"
         Thread.exit!
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
@@ -198,7 +198,7 @@ class Monitor
                     warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} Set running to false " if OPTS[:debug]
                     @debug_client.close_debugger if @debugger
                     @debugger=nil
-                    warn "Monitor thread killed debugger, about to try and exit"
+                    warn "#{__method__} Monitor thread killed debugger, about to try and exit"
                     Thread.exit!
                 end
             end
@@ -218,10 +218,9 @@ class Monitor
     end
 
     def last_tick
-        return unless (@monitor_thread.alive? and running?)
         now=@tick_count
         until @tick_count > now
-            # do nothing
+            return unless (@monitor_thread.alive? and running?)
         end
     end
 
