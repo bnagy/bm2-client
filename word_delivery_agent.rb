@@ -110,6 +110,7 @@ class WordDeliveryAgent
             end
             status='fail'
         end
+        sleep 0.1 # magic sleeps ftw!
         begin
             @word_conn.close_documents rescue nil
             @monitor.last_tick
