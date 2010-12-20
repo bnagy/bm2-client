@@ -84,8 +84,8 @@ class WordDeliveryAgent
             setup_for_delivery( delivery_options )
         end
         begin
+            @word_conn.visible=@agent_options['visible'] # if this raises the app has died
             @monitor.new_test filename
-            @word_conn.visible=@agent_options['visible']
         rescue
             debug_info "Monitor reports fault in new_test, Setting up again."
             setup_for_delivery( delivery_options )
@@ -98,9 +98,8 @@ class WordDeliveryAgent
         retry_count=RETRIES
         begin
             warn "About to deliver"
-            doc=@word_conn.blocking_write( filename )
+            @word_conn.blocking_write( filename ).close
             raise unless @monitor.running?
-            doc.close
             status='success'
         rescue
             unless @monitor.running?
