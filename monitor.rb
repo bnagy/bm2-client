@@ -142,7 +142,10 @@ class Monitor
                 treat_as_fatal( debugger_output )
             else
                 warn "#{COMPONENT}:#{VERSION}: No exception after hang" if OPTS[:debug]
-                reset
+                @debug_client.close_debugger if @debugger
+                @debugger=nil
+                warn "Monitor thread killed debugger, about to try and exit"
+                Thread.exit!
             end
         end
     rescue
@@ -153,7 +156,10 @@ class Monitor
     def treat_as_fatal( debugger_output )
         get_minidump if @monitor_args['minidump']
         @exception_data=debugger_output
-        reset
+        @debug_client.close_debugger if @debugger
+        @debugger=nil
+        warn "Monitor thread killed debugger, about to try and exit"
+        Thread.exit!
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
         raise $!
