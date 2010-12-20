@@ -118,7 +118,11 @@ class Monitor
                         PostMessage.call(toplevel_box,WM_COMMAND,IDOK,0)
                     end
                     sleep(0.5)
-                    print 'o'
+                    if @monitor_thread.alive? 
+                        print 'o' 
+                    else
+                        print 'x'
+                    end
                 rescue
                     sleep(0.5)
                     warn "#{COMPONENT}:#{VERSION}: Error in DK thread: #{$!}"
@@ -161,11 +165,11 @@ class Monitor
         @monitor_thread=Thread.new do
             @running=true
             @tick_count=0
-            warn "#{COMPONENT}:#{VERSION}: Monitor thread started" if OPTS[:debug]
+            warn "#{COMPONENT}:#{VERSION}: Monitor thread started for #{pid}" if OPTS[:debug]
             loop do
                 begin
                     @pid=pid
-                    sleep 1
+                    sleep 0.5
                     @tick_count+=1
                     raise RuntimeError, "PID Mismatch" unless @pid==@debug_client.target_pid
                     if @debugger.target_running?
@@ -174,12 +178,12 @@ class Monitor
                         debugger_output=@debugger.sync_qc
                         warn "#{COMPONENT}:#{VERSION}: Target #{@debug_client.target_pid} broken..." if OPTS[:debug]
                         if fatal_exception? debugger_output
-                            warn debugger_output[-100..-1] if OPTS[:debug]
+                            warn debugger_output[-500..-1] if OPTS[:debug]
                             warn "#{COMPONENT}:#{VERSION}: Fatal exception. Killing debugee." if OPTS[:debug]
                             treat_as_fatal( debugger_output )
                         else
                             warn "#{COMPONENT}:#{VERSION}: Broken, but no fatal exception. Ignoring." if OPTS[:debug]
-                            warn debugger_output[-100..-1] if OPTS[:debug]
+                            warn debugger_output[-500..-1] if OPTS[:debug]
                             @debugger.puts "g" 
                         end
                     end
@@ -189,7 +193,6 @@ class Monitor
                     break
                 end
             end
-            reset
         end
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
@@ -206,10 +209,10 @@ class Monitor
     end
 
     def last_tick
-        return unless @monitor_thread.alive? and running?
+        return unless (@monitor_thread.alive? and running?)
         now=@tick_count
-        loop do
-            break if @tick_count > now
+        until @tick_count > now
+            # do nothing
         end
     end
 
