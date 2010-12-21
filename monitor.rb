@@ -289,6 +289,7 @@ class Monitor
         raise "#{COMPONENT}:#{VERSION}: Unable to continue, no debugger" unless @debugger
         raise "#{COMPONENT}:#{VERSION}: Uncleared exception data!!" if @exception_data
         @mark=Time.now 
+        @cpumon.clear_rolling_avg
         @debugger.dq_all
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
