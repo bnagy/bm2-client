@@ -134,6 +134,27 @@ class Monitor
         end
     end
 
+    def check_for_idle
+        # CPUMON_TICKS is the minimum number of events for rolling_avg - it
+        # returns nil otherwise
+        if (avg=@cpumon.rolling_avg( CPUMON_TICKS )) && avg < CPUMON_THRESH
+            warn "#{COMPONENT}:#{VERSION}: CPU monitor says 'no'. (average #{avg} at #{CPUMON_TICKS} measures)" if OPTS[:debug]
+            debugger_output=@debugger.sync_dq
+            if fatal_exception? debugger_output
+                warn "#{COMPONENT}:#{VERSION}: Fatal exception after idle" if OPTS[:debug]
+                treat_as_fatal( debugger_output )
+            else
+                warn "#{COMPONENT}:#{VERSION}: No exception after idle" if OPTS[:debug]
+                @debug_client.close_debugger if @debugger
+                @debugger=nil
+                Thread.exit
+            end
+        end
+    rescue
+        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
+        raise $!
+    end
+
     def check_for_timeout
         if Time.now - @mark > @monitor_args['timeout']
             warn "CPU: #{@cpumon.rolling_avg( 6 )}"
@@ -181,15 +202,8 @@ class Monitor
                     sleep MONITOR_GRANULARITY
                     @tick_count+=1
                     @cpumon.update_rolling_avg
-                    # CPUMON_TICKS is the minimum number of events for rolling_avg - it
-                    # returns nil otherwise
-                    if (avg=@cpumon.rolling_avg( CPUMON_TICKS )) && avg < CPUMON_THRESH
-                        warn "#{COMPONENT}:#{VERSION}: CPU monitor says 'no'. (average #{avg} at #{CPUMON_TICKS} measures)" if OPTS[:debug]
-                        @debug_client.close_debugger if @debugger
-                        @debugger=nil
-                        Thread.exit
-                    end
                     if @debugger.target_running?
+                        check_for_idle
                         check_for_timeout
                     else
                         debugger_output=@debugger.sync_qc
