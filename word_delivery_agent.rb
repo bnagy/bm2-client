@@ -77,7 +77,12 @@ class WordDeliveryAgent
         delivery_options=DELIVERY_DEFAULTS.merge( delivery_options )
         if @monitor.exception_data
             puts "UNHANDLED CRASH!!" # the ultimate sin
-            exit
+            @unhandled||=0
+            @unhandled+=1
+            # Do something better with these later. For now, don't lose 'em!
+            File.open("C:\#{unhandled}-#{@unhandled}.doc","wb+") {|io| io.write( @current_chain.last )}
+            File.open("C:\#{unhandled}-info#{@unhandled}.txt","wb+") {|io| io.write( @monitor.exception_data )}
+            @monitor.clear_exception
         end
         if delivery_options['clean'] or not (@word_conn && @word_conn.connected?)
             @monitor.reset
