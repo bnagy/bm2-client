@@ -136,6 +136,7 @@ class Monitor
 
     def check_for_timeout
         if Time.now - @mark > @monitor_args['timeout']
+            warn "CPU: #{@cpumon.rolling_avg( 6 )}"
             warn "#{COMPONENT}:#{VERSION}: Timeout (#{Time.now - @mark}) Exceeded." if OPTS[:debug]
             @hang=true
             debugger_output=@debugger.sync_dq
