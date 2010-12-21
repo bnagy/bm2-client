@@ -10,7 +10,7 @@ require File.dirname(__FILE__) + '/drb_debug_client'
 class WordDeliveryAgent
 
     COMPONENT="WordDeliveryAgent"
-    VERSION="1.5.0"
+    VERSION="1.6.0"
     DELIVERY_DEFAULTS={
         'clean'=>false, 
         'filechain'=>false,
@@ -25,7 +25,7 @@ class WordDeliveryAgent
     RETRIES=50
 
     def debug_info( str )
-        warn "#{COMPONENT} : #{VERSION}: #{str}" if @agent_options['debug']
+        warn "#{COMPONENT}-#{VERSION}: #{str}" if @agent_options['debug']
     end
 
     def initialize( arg_hash={} )
@@ -89,7 +89,7 @@ class WordDeliveryAgent
             setup_for_delivery( delivery_options )
         end
         begin
-            @word_conn.visible=@agent_options['visible'] # if this raises the app has died
+            @word_conn.visible=@agent_options['visible'] # if this raises the app has died or hung
             @monitor.new_test filename
         rescue
             debug_info "Monitor reports fault in new_test, Setting up again."
@@ -102,6 +102,7 @@ class WordDeliveryAgent
         @current_chain << File.open( filename, "rb") {|io| io.read}
         retry_count=RETRIES
         begin
+            # Open and then close the document via OLE
             @word_conn.blocking_write( filename ).close
             raise unless @monitor.running?
             status='success'
@@ -116,18 +117,17 @@ class WordDeliveryAgent
         end
         begin
             @monitor.last_tick
-            if @monitor.hang?
+            if @monitor.hang? #overwrites previous status
                 status='hang'
                 @monitor.clear_hang
                 @word_conn.close rescue nil
                 @word_conn=nil
             end
             if @monitor.exception_data
-                status='crash'
+                status='crash' # overwrites previous status
                 exception_data=@monitor.exception_data
                 @monitor.clear_exception
                 chain=@current_chain if delivery_options['filechain']
-                debug_info "Chain length #{@current_chain.size}"
                 @word_conn.close rescue nil
                 @word_conn=nil
             end

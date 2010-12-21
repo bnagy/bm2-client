@@ -4,6 +4,7 @@
 # (See README.TXT or http://www.opensource.org/licenses/mit-license.php for details.)
 
 require File.dirname(__FILE__) + '/drb_debug_client'
+require File.dirname(__FILE__) + '/cpumon'
 require 'rubygems'
 require 'fileutils'
 require 'win32api'
@@ -17,13 +18,16 @@ end
 class Monitor
 
     COMPONENT="Monitor"
-    VERSION="1.5.0"
+    VERSION="1.6.0"
     MONITOR_DEFAULTS={
         'timeout'=>15,
         'ignore_exceptions'=>[],
         'kill_dialogs'=>true
     }
     CDB_PATH='"C:\\Program Files\\Debugging Tools for Windows (x86)\\cdb.exe" '
+    CPUMON_TICKS=6
+    CPUMON_THRESH=0.01
+    MONITOR_GRANULARITY=0.5
 
     # Constants for the dialog killer thread
     BMCLICK=0x00F5
@@ -167,13 +171,23 @@ class Monitor
         @monitor_thread=Thread.new do
             @running=true
             @tick_count=0
+            @cpumon=ProcessCPUMonitor.new( pid )
             warn "#{COMPONENT}:#{VERSION}: Monitor thread started for #{pid}" if OPTS[:debug]
             loop do
                 begin
                     @pid=pid
-                    sleep 0.5
-                    @tick_count+=1
                     raise RuntimeError, "PID Mismatch" unless @pid==@debug_client.target_pid
+                    sleep MONITOR_GRANULARITY
+                    @tick_count+=1
+                    @cpumon.update_rolling_avg
+                    # CPUMON_TICKS is the minimum number of events for rolling_avg - it
+                    # returns nil otherwise
+                    if (avg=@cpumon.rolling_avg( CPUMON_TICKS )) && avg < CPUMON_THRESH
+                        warn "#{COMPONENT}:#{VERSION}: CPU monitor says 'no'. (average #{avg} at #{CPUMON_TICKS} measures)" if OPTS[:debug]
+                        @debug_client.close_debugger if @debugger
+                        @debugger=nil
+                        Thread.exit
+                    end
                     if @debugger.target_running?
                         check_for_timeout
                     else
@@ -236,8 +250,8 @@ class Monitor
         end
         return true if output=~/second chance/i
         return false unless output=~/frobozz/
-        # Does the most recent exception match none of the ignore regexps?
-        exception=output.split(/frobozz/i).last
+            # Does the most recent exception match none of the ignore regexps?
+            exception=output.split(/frobozz/i).last
         @monitor_args['ignore_exceptions'].none? {|ignore_string| exception=~(Regexp.new(eval(ignore_string)))} 
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$@.join "\n"} " if OPTS[:debug]
