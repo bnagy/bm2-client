@@ -20,7 +20,7 @@ class Monitor
     COMPONENT="Monitor"
     VERSION="1.6.0"
     MONITOR_DEFAULTS={
-        'timeout'=>15,
+        'timeout'=>25,
         'ignore_exceptions'=>[],
         'kill_dialogs'=>true
     }
@@ -158,14 +158,14 @@ class Monitor
     def check_for_timeout
         if Time.now - @mark > @monitor_args['timeout']
             warn "CPU: #{@cpumon.rolling_avg( 6 )}"
-            warn "#{COMPONENT}:#{VERSION}: Timeout (#{Time.now - @mark}) Exceeded." if OPTS[:debug]
+            warn "#{COMPONENT}:#{VERSION}: Hard Timeout (#{Time.now - @mark}) Exceeded." if OPTS[:debug]
             @hang=true
             debugger_output=@debugger.sync_dq
             if fatal_exception? debugger_output
-                warn "#{COMPONENT}:#{VERSION}: Fatal exception after hang" if OPTS[:debug]
+                warn "#{COMPONENT}:#{VERSION}: Fatal exception after timeout" if OPTS[:debug]
                 treat_as_fatal( debugger_output )
             else
-                warn "#{COMPONENT}:#{VERSION}: No exception after hang" if OPTS[:debug]
+                warn "#{COMPONENT}:#{VERSION}: No exception after timeout" if OPTS[:debug]
                 @debug_client.close_debugger if @debugger
                 @debugger=nil
                 Thread.exit
@@ -202,9 +202,9 @@ class Monitor
                     sleep MONITOR_GRANULARITY
                     @tick_count+=1
                     @cpumon.update_rolling_avg
+                    check_for_timeout
                     if @debugger.target_running?
                         check_for_idle
-                        check_for_timeout
                     else
                         debugger_output=@debugger.sync_qc
                         warn "#{COMPONENT}:#{VERSION}: Target #{@debug_client.target_pid} broken..." if OPTS[:debug]
