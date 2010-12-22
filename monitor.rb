@@ -54,6 +54,19 @@ class Monitor
         raise $!
     end
 
+    def start( app_pid, app_wid, arg_hsh={} )
+        warn "#{COMPONENT}:#{VERSION}: Starting to monitor pid #{app_pid}" if OPTS[:debug]
+        start_debugger( app_pid )
+        raise RuntimeError, "#{COMPONENT}:#{VERSION}: Debugee PID mismatch" unless @debug_client.target_pid==app_pid
+        @monitor_args=MONITOR_DEFAULTS.merge( arg_hsh )
+        start_dk_thread( app_wid ) if @monitor_args['kill_dialogs']
+        start_monitor_thread( app_pid )
+    rescue
+        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
+        reset
+        raise $!
+    end
+
     def start_debugger( pid )
         @debugger_uri=@debug_client.start_debugger('pid'=>pid, 'options'=>"-xi ld", 'path'=>CDB_PATH )
         @debugger=DRbObject.new nil, @debugger_uri
@@ -134,59 +147,6 @@ class Monitor
         end
     end
 
-    def check_for_idle
-        # CPUMON_TICKS is the minimum number of events for rolling_avg - it
-        # returns nil otherwise
-        if (avg=@cpumon.rolling_avg( CPUMON_TICKS )) && avg < CPUMON_THRESH
-            warn "#{COMPONENT}:#{VERSION}: CPU monitor says 'no'. (average #{avg} at #{CPUMON_TICKS} measures)" if OPTS[:debug]
-            debugger_output=@debugger.sync_dq
-            if fatal_exception? debugger_output
-                warn "#{COMPONENT}:#{VERSION}: Fatal exception after idle" if OPTS[:debug]
-                treat_as_fatal( debugger_output )
-            else
-                warn "#{COMPONENT}:#{VERSION}: No exception after idle" if OPTS[:debug]
-                @debug_client.close_debugger if @debugger
-                @debugger=nil
-                Thread.exit
-            end
-        end
-    rescue
-        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
-        raise $!
-    end
-
-    def check_for_timeout
-        if Time.now - @mark > @monitor_args['timeout']
-            warn "CPU: #{@cpumon.rolling_avg( 6 )}"
-            warn "#{COMPONENT}:#{VERSION}: Hard Timeout (#{Time.now - @mark}) Exceeded." if OPTS[:debug]
-            @hang=true
-            debugger_output=@debugger.sync_dq
-            if fatal_exception? debugger_output
-                warn "#{COMPONENT}:#{VERSION}: Fatal exception after timeout" if OPTS[:debug]
-                treat_as_fatal( debugger_output )
-            else
-                warn "#{COMPONENT}:#{VERSION}: No exception after timeout" if OPTS[:debug]
-                @debug_client.close_debugger if @debugger
-                @debugger=nil
-                Thread.exit
-            end
-        end
-    rescue
-        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
-        raise $!
-    end
-
-    def treat_as_fatal( debugger_output )
-        get_minidump if @monitor_args['minidump']
-        @exception_data=debugger_output
-        @debug_client.close_debugger if @debugger
-        @debugger=nil
-        Thread.exit
-    rescue
-        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
-        raise $!
-    end
-
     def start_monitor_thread( pid )
         raise RuntimeError, "#{COMPONENT}:#{VERSION}: Debugger not initialized yet!" unless @debugger
         @monitor_thread.kill if @monitor_thread
@@ -241,24 +201,6 @@ class Monitor
         @hang
     end
 
-    def exception_data
-        @exception_data
-    end
-
-    def last_tick
-        now=@tick_count
-        until @tick_count > now
-            unless (@monitor_thread.alive? and running?)
-                sleep 0.5 and return
-            end
-        end
-    end
-
-    def get_minidump
-        warn "#{COMPONENT}:#{VERSION}: Collecting minidump..." if OPTS[:debug]
-        #do something
-    end
-
     def fatal_exception?( output )
         unless output.scan(/frobozz/).length==output.scan(/xyzzy/).length
             raise RuntimeError, "#{COMPONENT}:#{VERSION}:#{__method__}: unfinished exception output."
@@ -273,20 +215,87 @@ class Monitor
         raise $!
     end
 
-    def start( app_pid, app_wid, arg_hsh={} )
-        warn "#{COMPONENT}:#{VERSION}: Starting to monitor pid #{app_pid}" if OPTS[:debug]
-        start_debugger( app_pid )
-        raise RuntimeError, "#{COMPONENT}:#{VERSION}: Debugee PID mismatch" unless @debug_client.target_pid==app_pid
-        @monitor_args=MONITOR_DEFAULTS.merge( arg_hsh )
-        start_dk_thread( app_wid ) if @monitor_args['kill_dialogs']
-        start_monitor_thread( app_pid )
+    def check_for_idle
+        # Only called from within the monitor thread, so the Thread.exit
+        # exits @monitor_thread not the whole app
+        #
+        # CPUMON_TICKS is the minimum number of events for rolling_avg - it
+        # returns nil otherwise
+        if (avg=@cpumon.rolling_avg( CPUMON_TICKS )) && avg < CPUMON_THRESH
+            warn "#{COMPONENT}:#{VERSION}: CPU monitor says 'no'. (average #{avg} at #{CPUMON_TICKS} measures)" if OPTS[:debug]
+            debugger_output=@debugger.sync_dq
+            if fatal_exception? debugger_output
+                warn "#{COMPONENT}:#{VERSION}: Fatal exception after idle" if OPTS[:debug]
+                treat_as_fatal( debugger_output )
+            else
+                warn "#{COMPONENT}:#{VERSION}: No exception after idle" if OPTS[:debug]
+                @debug_client.close_debugger if @debugger
+                @debugger=nil
+                Thread.exit
+            end
+        end
     rescue
         warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
-        reset
         raise $!
     end
 
+    def check_for_timeout
+        # Only called from within the monitor thread, so the Thread.exit
+        # exits @monitor_thread not the whole app
+        if Time.now - @mark > @monitor_args['timeout']
+            warn "CPU: #{@cpumon.rolling_avg( 6 )}"
+            warn "#{COMPONENT}:#{VERSION}: Hard Timeout (#{Time.now - @mark}) Exceeded." if OPTS[:debug]
+            @hang=true
+            debugger_output=@debugger.sync_dq
+            if fatal_exception? debugger_output
+                warn "#{COMPONENT}:#{VERSION}: Fatal exception after timeout" if OPTS[:debug]
+                treat_as_fatal( debugger_output )
+            else
+                warn "#{COMPONENT}:#{VERSION}: No exception after timeout" if OPTS[:debug]
+                @debug_client.close_debugger if @debugger
+                @debugger=nil
+                Thread.exit
+            end
+        end
+    rescue
+        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
+        raise $!
+    end
+
+    def treat_as_fatal( debugger_output )
+        # Only called from within the monitor thread, so the Thread.exit
+        # exits @monitor_thread not the whole app
+        get_minidump if @monitor_args['minidump']
+        @exception_data=debugger_output
+        @debug_client.close_debugger if @debugger
+        @debugger=nil
+        Thread.exit
+    rescue
+        warn "#{COMPONENT}:#{VERSION}: #{__method__} #{$!} " if OPTS[:debug]
+        raise $!
+    end
+
+    def exception_data
+        @exception_data
+    end
+
+    def last_tick
+        now=@tick_count
+        until @tick_count > now
+            unless (@monitor_thread.alive? and running?)
+                sleep MONITOR_GRANULARITY and return
+            end
+        end
+    end
+
+    def get_minidump
+        warn "#{COMPONENT}:#{VERSION}: Collecting minidump..." if OPTS[:debug]
+        #do something
+    end
+
     def reset
+        # Only called externally - trying to kill a thread from inside itself
+        # doesn't seem to work properly
         warn "#{COMPONENT}:#{VERSION}: Reset called, debugger #{@debug_client.debugger_pid rescue 0}, running - #{@running}" if OPTS[:debug]
         @debug_client.close_debugger if @debugger
         Thread.kill( @monitor_thread ) if @monitor_thread
