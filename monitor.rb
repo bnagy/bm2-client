@@ -279,6 +279,10 @@ class Monitor
         @exception_data
     end
 
+    def minidump
+        @minidump
+    end
+
     def last_tick
         now=@tick_count
         until @tick_count > now
@@ -291,6 +295,13 @@ class Monitor
     def get_minidump
         warn "#{COMPONENT}:#{VERSION}: Collecting minidump..." if OPTS[:debug]
         #do something
+        @debugger.puts ".dump /mFhutwd r:\\fuzzclient\\mini.dmp"
+        @debugger.sync
+        unless File.exists? "R:/fuzzclient/mini.dmp"
+            raise RuntimeError, "#{COMPONENT}-#{VERSION}:#{__method__}: Tried to dump, but couldn't find it!"
+        end
+        @minidump=File.open( "R:/fuzzclient/mini.dmp", "rb" ) {|io| io.read}
+        FileUtils.rm_f( "R:/fuzzclient/mini.dmp" )
     end
 
     def reset
