@@ -75,47 +75,47 @@ class WordDeliveryAgent
         exception_data=''
         chain=''
         delivery_options=DELIVERY_DEFAULTS.merge( delivery_options )
-        if @monitor.exception_data
-            puts "UNHANDLED CRASH!!" # the ultimate sin
-            @unhandled||=0
-            @unhandled+=1
-            # Do something better with these later. For now, don't lose 'em!
-            File.open("C:\#{unhandled}-#{@unhandled}.doc","wb+") {|io| io.write( @current_chain.last )}
-            File.open("C:\#{unhandled}-info#{@unhandled}.txt","wb+") {|io| io.write( @monitor.exception_data )}
-            @monitor.clear_exception
-        end
-        if delivery_options['clean'] or not (@word_conn && @word_conn.connected?)
-            @monitor.reset
-            setup_for_delivery( delivery_options )
-        end
         begin
-            @word_conn.visible=@agent_options['visible'] # if this raises the app has died or hung
-            @monitor.new_test filename
-        rescue
-            debug_info "Monitor reports fault in new_test, Setting up again."
-            setup_for_delivery( delivery_options )
-        end
-        # Always keep file chains, but only send them back
-        # when the filechain option is set. Uses more RAM
-        # but it makes no sense to be able to set this option per
-        # test.
-        @current_chain << File.open( filename, "rb") {|io| io.read}
-        retry_count=RETRIES
-        begin
-            # Open and then close the document via OLE
-            @word_conn.blocking_write( filename ).close
-            raise unless @monitor.running?
-            status='success'
-        rescue
-            unless @monitor.running?
-                raise "#{COMPONENT}:#{VERSION} Too many faults, giving up." if (retry_count-=1)<=0
-                debug_info "Monitor reports fault. Delivering again."
-                setup_for_delivery( delivery_options, preserve_chain=true )
-                retry
+            if @monitor.exception_data
+                puts "UNHANDLED CRASH!!" # the ultimate sin
+                @unhandled||=0
+                @unhandled+=1
+                # Do something better with these later. For now, don't lose 'em!
+                File.open("C:\#{unhandled}-#{@unhandled}.doc","wb+") {|io| io.write( @current_chain.last )}
+                File.open("C:\#{unhandled}-info#{@unhandled}.txt","wb+") {|io| io.write( @monitor.exception_data )}
+                @monitor.clear_exception
             end
-            status='fail'
-        end
-        begin
+            if delivery_options['clean'] or not (@word_conn && @word_conn.connected?)
+                @monitor.reset
+                setup_for_delivery( delivery_options )
+            end
+            begin
+                @word_conn.visible=@agent_options['visible'] # if this raises the app has died or hung
+                @monitor.new_test filename
+            rescue
+                debug_info "Monitor reports fault in new_test, Setting up again."
+                setup_for_delivery( delivery_options )
+            end
+            # Always keep file chains, but only send them back
+            # when the filechain option is set. Uses more RAM
+            # but it makes no sense to be able to set this option per
+            # test.
+            @current_chain << File.open( filename, "rb") {|io| io.read}
+            retry_count=RETRIES
+            begin
+                # Open and then close the document via OLE
+                @word_conn.blocking_write( filename ).close
+                raise unless @monitor.running?
+                status='success'
+            rescue
+                unless @monitor.running?
+                    raise "#{COMPONENT}:#{VERSION} Too many faults, giving up." if (retry_count-=1)<=0
+                    debug_info "Monitor reports fault. Delivering again."
+                    setup_for_delivery( delivery_options, preserve_chain=true )
+                    retry
+                end
+                status='fail'
+            end
             @monitor.last_tick
             if @monitor.hang? #overwrites previous status
                 status='hang'
