@@ -24,6 +24,9 @@ class DebugServer
         warn "#{COMPONENT}:#{VERSION}: Started #{@this_debugger.debugger_pid} for #{args[0]['pid']}" if OPTS[:debug]
         # Return the pids so the client code can cache them
         [@this_debugger.debugger_pid, @this_debugger.target_pid, @subserver.uri]
+    rescue
+        warn $@
+        raise $!
     end
 
     def close_debugger
@@ -32,6 +35,9 @@ class DebugServer
         @subserver.stop_service if @subserver
         @subserver=nil
         warn "#{COMPONENT}:#{VERSION}: Closed" if OPTS[:debug]
+    rescue
+        warn $@
+        raise $!
     end
 
     def destroy

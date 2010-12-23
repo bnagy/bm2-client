@@ -159,12 +159,7 @@ module CONN_CDB
         # if a thread is suspended is to suspend it, which returns the
         # suspend count - 0 if it was previously running.
         begin
-            # This sometimes throws a 'paging file is too small to complete' error
-            if (hSnap=CreateToolhelp32Snapshot.call( TH32CS_SNAPTHREAD, 0 ))==INVALID_HANDLE_VALUE
-                destroy_connection # kill the target
-                sleep 30 # hopefully give GC a chance to get some RAM back
-                raise_win32_error("CreateSnap")
-            end
+            raise_win32_error("CreateSnap") if (hSnap=CreateToolhelp32Snapshot.call( TH32CS_SNAPTHREAD, 0 ))==INVALID_HANDLE_VALUE
             # I'm going to go ahead and do this the horrible way. This is a
             # blank Threadentry32 structure, with the size (28) as the first
             # 4 bytes (little endian). It will be filled in by the Thread32Next
