@@ -161,9 +161,9 @@ module CONN_CDB
         begin
             # This sometimes throws a 'paging file is too small to complete' error
             if (hSnap=CreateToolhelp32Snapshot.call( TH32CS_SNAPTHREAD, 0 ))==INVALID_HANDLE_VALUE
-                raise_win32_error("CreateSnap")
                 destroy_connection # kill the target
                 sleep 30 # hopefully give GC a chance to get some RAM back
+                raise_win32_error("CreateSnap")
             end
             # I'm going to go ahead and do this the horrible way. This is a
             # blank Threadentry32 structure, with the size (28) as the first
