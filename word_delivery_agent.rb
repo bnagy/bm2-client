@@ -6,11 +6,12 @@
 require File.dirname(__FILE__) + '/../bm2-core/connector'
 require File.dirname(__FILE__) + '/conn_office'
 require File.dirname(__FILE__) + '/drb_debug_client'
+require File.dirname(__FILE__) + '/process_killer'
 
 class WordDeliveryAgent
 
     COMPONENT="WordDeliveryAgent"
-    VERSION="1.6.0"
+    VERSION="1.6.1"
     DELIVERY_DEFAULTS={
         'clean'=>false, 
         'filechain'=>false,
@@ -29,6 +30,8 @@ class WordDeliveryAgent
     end
 
     def initialize( arg_hash={} )
+        ProcessKiller::nicely_kill "WINWORD.EXE"
+        ProcessKiller::nicely_kill "explorer.exe"
         @agent_options=AGENT_DEFAULTS.merge( arg_hash )
         # Start with high priority for better chance of killing processes pegging the CPU
         debug_info "Starting monitor server..."
