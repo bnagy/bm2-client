@@ -26,6 +26,7 @@ module ProcessKiller
     def slay( caption )
         retry_count=RETRY_COUNT
         loop do
+            return if (pids=pids( caption )).empty?
             kill_all 9, pids
             return if (pids=pids( caption )).empty?
             raise "#{COMPONENT}:#{VERSION}: #{__method__}( #{caption} ) exceeded retries." if (retry_count-=1) <= 0
@@ -36,6 +37,7 @@ module ProcessKiller
     def nicely_kill( caption )
         retry_count=RETRY_COUNT
         loop do
+            return if (pids=pids( caption )).empty?
             kill_all 1, pids
             return if (pids=pids( caption )).empty?
             if (retry_count-=1) <= 0
