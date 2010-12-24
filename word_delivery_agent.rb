@@ -31,7 +31,7 @@ class WordDeliveryAgent
 
     def initialize( arg_hash={} )
         ProcessKiller::nicely_kill "WINWORD.EXE"
-        ProcessKiller::nicely_kill "explorer.exe"
+        ProcessKiller::slay "explorer.exe"
         @agent_options=AGENT_DEFAULTS.merge( arg_hash )
         # Start with high priority for better chance of killing processes pegging the CPU
         debug_info "Starting monitor server..."
