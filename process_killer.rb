@@ -46,6 +46,6 @@ module ProcessKiller
         end
     end
 
-    module_function :nicely_kill, :slay
+    module_function :nicely_kill, :slay, :pids
 
 end
