@@ -31,7 +31,15 @@ class WordDeliveryAgent
 
     def initialize( arg_hash={} )
         ProcessKiller::nicely_kill "WINWORD.EXE"
-        ProcessKiller::slay "explorer.exe"
+        # For some reason explorer.exe can't be killed with Process.kill(9)
+        # it just restarts again :/
+        begin
+            explorer_pid=ProcessKiller::pids("explorer.exe").first
+            hprocess=Windows::Process::OpenProcess.call(Windows::Process::PROCESS_TERMINATE,0,explorer_pid)
+            Windows::Process::TerminateProcess.call(hprocess,1)
+        rescue
+            #can't be bothered
+        end
         @agent_options=AGENT_DEFAULTS.merge( arg_hash )
         # Start with high priority for better chance of killing processes pegging the CPU
         debug_info "Starting monitor server..."
