@@ -247,7 +247,7 @@ class Monitor
             warn "#{COMPONENT}:#{VERSION}: Hard Timeout (#{Time.now - @mark}) Exceeded." if OPTS[:debug]
             @hang=true
             debugger_output=@debugger.sync_dq
-            if fatal_exception? debugger_output
+            if (fatal_exception?( debugger_output ) rescue true)
                 warn "#{COMPONENT}:#{VERSION}: Fatal exception after timeout" if OPTS[:debug]
                 treat_as_fatal( debugger_output )
             else
