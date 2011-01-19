@@ -15,4 +15,4 @@ mkdir r:\fuzzclient
 REM CHANGE THIS TO THE CORRECT PATH
 "C:\Program Files\Debugging Tools for Windows (x86)\gflags" /p /enable WINWORD.EXE /full
 cd c:\fuzzbot_code\bm2-client
-start cmd /k ruby word_fuzzclient.rb
+start cmd /k ruby word_fuzzclient.rb -d
