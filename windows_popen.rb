@@ -126,8 +126,8 @@ module WindowsPipe
         end 
 
         def close
-            close_handle(@hRead)
-            close_handle(@hWrite)
+            close_handle(@hRead) rescue nil
+            close_handle(@hWrite) rescue nil
         end
 
     end 

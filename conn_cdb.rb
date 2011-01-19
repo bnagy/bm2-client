@@ -47,7 +47,7 @@ module CONN_CDB
         rescue
             $sterr.puts $!
             $sterr.puts $@
-            @cdb_app.close
+            @cdb_app=nil
             raise $!
         end
     end
@@ -94,10 +94,10 @@ module CONN_CDB
             # thread, which ends up leaking thread handles when the process is 
             # suspended and then the debugger exits.
             @cdb_app.close if @cdb_app
+            @cdb_app=nil # for if destroy_connection gets called twice
             Process.kill(1, debugger_pid) rescue nil
             # Right now, windows kills CDB when the last handle to it is
             # closed, which also kills the target.
-            @cdb_app=nil # for if destroy_connection gets called twice
         rescue
             $stderr.puts $!
             $stderr.puts $@
