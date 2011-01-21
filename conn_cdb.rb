@@ -95,7 +95,7 @@ module CONN_CDB
             # suspended and then the debugger exits.
             @cdb_app.close if @cdb_app
             @cdb_app=nil # for if destroy_connection gets called twice
-            Process.kill(1, debugger_pid) rescue nil
+            Process.kill(9, debugger_pid) rescue nil
             # Right now, windows kills CDB when the last handle to it is
             # closed, which also kills the target.
         rescue
