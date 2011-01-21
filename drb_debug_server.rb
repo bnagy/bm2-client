@@ -31,7 +31,7 @@ class DebugServer
 
     def close_debugger
         warn "#{COMPONENT}:#{VERSION}: Closing #{@this_debugger.debugger_pid rescue -1}" if OPTS[:debug]
-        Thread.critical do
+        Thread.exclusive do
             @this_debugger.close if @this_debugger
             @this_debugger=nil
             @subserver.stop_service if @subserver
