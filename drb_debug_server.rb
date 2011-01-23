@@ -20,6 +20,7 @@ class DebugServer
 
     def start_debugger( *args )
         @this_debugger=Connector.new(CONN_CDB, *args)
+        @debugger_mutex=Mutex.new
         @subserver=DRb.start_service( nil, @this_debugger )
         warn "#{COMPONENT}:#{VERSION}: Started #{@this_debugger.debugger_pid} for #{args[0]['pid']}" if OPTS[:debug]
         # Return the pids so the client code can cache them
@@ -30,13 +31,15 @@ class DebugServer
     end
 
     def close_debugger
+        # This method isn't reentrant, things can break if it gets called again before it's done
+        # so we just use a simple mutex to stop that from happening.
         warn "#{COMPONENT}:#{VERSION}: Closing #{@this_debugger.debugger_pid rescue -1}" if OPTS[:debug]
-        Thread.exclusive do
+        @debugger_mutex.synchronize do
             @this_debugger.close if @this_debugger
             @this_debugger=nil
-            @subserver.stop_service if @subserver
-            @subserver=nil
         end
+        @subserver.stop_service if @subserver
+        @subserver=nil
         warn "#{COMPONENT}:#{VERSION}: Closed" if OPTS[:debug]
     rescue
         warn $@

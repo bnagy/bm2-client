@@ -90,15 +90,17 @@ module CONN_CDB
     #Cleanly destroy the socket. 
     def destroy_connection
         begin
-            # Don't use Process.kill( 1,... here because that creates a remote
-            # thread, which ends up leaking thread handles when the process is 
-            # suspended and then the debugger exits.
             @cdb_app.close if @cdb_app
             @cdb_app=nil # for if destroy_connection gets called twice
-            Process.kill(9, debugger_pid) rescue nil
-            Process.kill(9, target_pid) rescue nil
             # Right now, windows kills CDB when the last handle to it is
-            # closed, which also kills the target.
+            # closed, which also kills the target. BUT in some cases it
+            # doesn't seem to work, so nuke the site from orbit, it's the
+            # only way to be sure.
+            Process.kill(9, debugger_pid) rescue nil
+            # Don't use Process.kill( 1,... on the debugee  because that creates a remote
+            # thread, which ends up leaking thread handles when the process is 
+            # suspended and then the debugger exits.
+            Process.kill(9, target_pid) rescue nil
         rescue
             $stderr.puts $!
             $stderr.puts $@
